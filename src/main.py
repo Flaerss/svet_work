@@ -9,16 +9,23 @@ from scheduler import scheduler
 from database import Database
 from config import LOG_CONFIG
 
+# Загрузка переменных окружения
+load_dotenv()
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+ADMIN_ID = os.getenv("ADMIN_ID")
+
+# Проверка обязательных переменных
+if not BOT_TOKEN or not ADMIN_ID:
+    raise ValueError("BOT_TOKEN и ADMIN_ID обязательны!")
+
+try:
+    ADMIN_ID = int(ADMIN_ID)  # Конвертация в число
+except ValueError:
+    raise ValueError("ADMIN_ID должен быть числом!")
+
 # Настройка логирования
 logging.config.dictConfig(LOG_CONFIG)
 logger = logging.getLogger(__name__)
-
-# Загрузка переменных окружения
-BOT_TOKEN = os.getenv("BOT_TOKEN")
-ADMIN_ID = int(os.getenv("ADMIN_ID"))
-WEBHOOK_URL = "https://your-service.onrender.com/webhook"
-PORT = int(os.getenv("PORT", 8000))
-
 async def on_startup(app: web.Application):
     """Действия при запуске"""
     Database()._create_tables()
