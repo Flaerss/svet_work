@@ -1,6 +1,6 @@
-from aiogram import types, Dispatcher
-from aiogram.dispatcher import FSMContext
+from aiogram import types
 from aiogram.filters import Command
+from aiogram import Dispatcher
 import logging
 from database import Database
 
@@ -42,6 +42,6 @@ async def my_bookings_handler(message: types.Message):
     await message.answer(response)
 
 def register_handlers(dp: Dispatcher) -> None:
-    dp.register_message_handler(start_handler, Command("start"), state="*")
-    dp.register_message_handler(booking_handler, Command("booking"), state="*")
-    dp.register_message_handler(my_bookings_handler, Command("my_bookings"), state="*")
+    dp.register_message_handler(start_handler, Command("start"))
+    dp.register_message_handler(booking_handler, Command("booking"))
+    dp.register_message_handler(my_bookings_handler, Command("my_bookings"))
