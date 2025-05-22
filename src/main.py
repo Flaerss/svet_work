@@ -10,71 +10,37 @@ from scheduler import scheduler
 from database import Database
 from config import LOG_CONFIG
 
-# Загрузка переменных окружения из .env
 load_dotenv()
 
-# Проверка обязательных переменных
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 ADMIN_ID = os.getenv("ADMIN_ID")
-PORT = os.getenv("PORT", "8000")  # Значение по умолчанию для порта
+WEBHOOK_URL = "https://your-service.onrender.com/webhook"  # Замените на ваш URL
+PORT = int(os.getenv("PORT", 8000))  # Порт для Render
 
+# Проверка переменных
 if not BOT_TOKEN or not ADMIN_ID:
-    raise ValueError("❌ BOT_TOKEN и ADMIN_ID должны быть заданы в .env!")
+    raise ValueError("❌ BOT_TOKEN и ADMIN_ID обязательны!")
 
 try:
-    ADMIN_ID = int(ADMIN_ID)  # Конвертация в число
+    ADMIN_ID = int(ADMIN_ID)
 except ValueError:
-    raise ValueError("❌ ADMIN_ID должен быть числом (например: 123456789)!")
+    raise ValueError("❌ ADMIN_ID должен быть числом!")
 
 # Настройка логирования
 logging.config.dictConfig(LOG_CONFIG)
 logger = logging.getLogger(__name__)
 
 async def on_startup(app: web.Application):
-    """Действия при запуске бота"""
-    try:
-        # Инициализация базы данных
-        Database()._create_tables()
-        logger.info("✅ База данных инициализирована")
-
-        # Запуск планировщика
-        await scheduler.start(Bot(token=BOT_TOKEN))
-        logger.info("✅ Планировщик задач запущен")
-
-        # Уведомление админа
-        await Bot(token=BOT_TOKEN).send_message(ADMIN_ID, "🤖 Бот успешно запущен!")
-        
-    except Exception as e:
-        logger.critical(f"❌ Ошибка при запуске: {e}", exc_info=True)
-        raise
-
-async def on_shutdown(app: web.Application):
-    """Действия при остановке бота"""
-    await Bot(token=BOT_TOKEN).session.close()
-    logger.info("✅ Ресурсы освобождены")
+    Database()._create_tables()
+    await scheduler.start(Bot(token=BOT_TOKEN))
+    await Bot(token=BOT_TOKEN).send_message(ADMIN_ID, "✅ Бот запущен!")
 
 if __name__ == "__main__":
-    try:
-        # Инициализация бота и диспетчера
-        bot = Bot(token=BOT_TOKEN, parse_mode=ParseMode.HTML)
-        dp = Dispatcher()
-
-        # Регистрация обработчиков
-        register_handlers(dp)
-
-        # Настройка веб-сервера
-        app = web.Application()
-        app.on_startup.append(on_startup)
-        app.on_shutdown.append(on_shutdown)
-        setup_application(app, dp, bot=bot)
-
-        # Запуск приложения
-        web.run_app(
-            app,
-            host="0.0.0.0",
-            port=int(PORT),
-            print=lambda _: logger.info(f"🚀 Сервер запущен на порту {PORT}")
-        )
-
-    except Exception as e:
-        logger.error(f"❌ Критическая ошибка: {e}", exc_info=True)
+    bot = Bot(token=BOT_TOKEN, parse_mode=ParseMode.HTML)
+    dp = Dispatcher()
+    register_handlers(dp)
+    
+    app = web.Application()
+    setup_application(app, dp, bot=bot)
+    app.on_startup.append(on_startup)
+    web.run_app(app, host="0.0.0.0", port=PORT)
