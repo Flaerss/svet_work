@@ -1,11 +1,10 @@
 import os
+import asyncio
 import logging
 from aiogram import Bot, Dispatcher
 from aiogram.enums import ParseMode
-from aiogram.webhook.aiohttp_server import setup_application
-from aiohttp import web
 from dotenv import load_dotenv
-from handlers import register_handlers
+from handlers import router
 from scheduler import scheduler
 from database import Database
 from config import LOG_CONFIG
@@ -14,12 +13,10 @@ load_dotenv()
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 ADMIN_ID = os.getenv("ADMIN_ID")
-WEBHOOK_URL = "https://your-service.onrender.com/webhook"  # Замените на ваш URL
-PORT = int(os.getenv("PORT", 8000))  # Порт для Render
 
 # Проверка переменных
 if not BOT_TOKEN or not ADMIN_ID:
-    raise ValueError("❌ BOT_TOKEN и ADMIN_ID обязательны!")
+    raise ValueError("❌ BOT_TOKEN и ADMIN_ID обязательны в .env!")
 
 try:
     ADMIN_ID = int(ADMIN_ID)
@@ -30,17 +27,24 @@ except ValueError:
 logging.config.dictConfig(LOG_CONFIG)
 logger = logging.getLogger(__name__)
 
-async def on_startup(app: web.Application):
-    Database()._create_tables()
-    await scheduler.start(Bot(token=BOT_TOKEN))
-    await Bot(token=BOT_TOKEN).send_message(ADMIN_ID, "✅ Бот запущен!")
-
-if __name__ == "__main__":
+async def main():
     bot = Bot(token=BOT_TOKEN, parse_mode=ParseMode.HTML)
     dp = Dispatcher()
-    register_handlers(dp)
     
-    app = web.Application()
-    setup_application(app, dp, bot=bot)
-    app.on_startup.append(on_startup)
-    web.run_app(app, host="0.0.0.0", port=PORT)
+    # Подключаем роутер
+    dp.include_router(router)
+    
+    # Инициализация БД
+    Database()._create_tables()
+    
+    # Запуск планировщика
+    await scheduler.start(bot)
+    
+    # Уведомление админа
+    await bot.send_message(ADMIN_ID, "✅ Бот запущен!")
+    
+    # Запуск поллинга
+    await dp.start_polling(bot)
+
+if __name__ == "__main__":
+    asyncio.run(main())
