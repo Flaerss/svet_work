@@ -1,11 +1,12 @@
-from aiogram import types
+from aiogram import types, Router
 from aiogram.filters import Command
-from aiogram import Dispatcher
 import logging
 from database import Database
 
 logger = logging.getLogger(__name__)
+router = Router()
 
+@router.message(Command("start"))
 async def start_handler(message: types.Message) -> None:
     """Обработчик команды /start"""
     try:
@@ -27,10 +28,12 @@ async def start_handler(message: types.Message) -> None:
     except Exception as e:
         logger.error(f"Ошибка: {e}", exc_info=True)
 
+@router.message(Command("booking"))
 async def booking_handler(message: types.Message):
     """Обработчик команды /booking"""
     await message.answer("📅 Введите дату фотосессии в формате ГГГГ-ММ-ДД ЧЧ:ММ")
 
+@router.message(Command("my_bookings"))
 async def my_bookings_handler(message: types.Message):
     """Обработчик команды /my_bookings"""
     db = Database()
@@ -40,8 +43,3 @@ async def my_bookings_handler(message: types.Message):
         for b in bookings
     ) if bookings else "❌ У вас нет активных записей"
     await message.answer(response)
-
-def register_handlers(dp: Dispatcher) -> None:
-    dp.register_message_handler(start_handler, Command("start"))
-    dp.register_message_handler(booking_handler, Command("booking"))
-    dp.register_message_handler(my_bookings_handler, Command("my_bookings"))
