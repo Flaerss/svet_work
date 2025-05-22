@@ -1,45 +1,32 @@
-from aiogram import types, Dispatcher
-from aiogram.dispatcher import FSMContext
-import logging
+from aiogram.filters import Command
+from database import Database  # Добавьте импорт
 
-logger = logging.getLogger(__name__)
-
-async def start_handler(message: types.Message) -> None:
-    """
-    Обработчик команды /start.
-    Отправляет приветственное сообщение и регистрирует пользователя.
-    """
-    try:
-        user = message.from_user
-        logger.info(f"Новый пользователь: {user.full_name} (ID: {user.id})")
-        await message.answer(
-            "Привет! Я бот Фотостудии SVET 📸\n\n"
-            "Чем могу помочь?\n"
-            "Доступные команды:\n"
-            "/booking - Записаться на сессию\n"
-            "/help - Помощь"
+async def booking_handler(message: types.Message):
+    """Обработчик команды /booking"""
+    db = Database()
+    user = db.get_user(message.from_user.id)
+    if not user:
+        db.add_user(
+            telegram_id=message.from_user.id,
+            full_name=message.from_user.full_name,
+            username=message.from_user.username
         )
-    except Exception as e:
-        logger.error(f"Ошибка в start_handler: {e}", exc_info=True)
+    await message.answer("📅 Введите дату фотосессии (например, 2023-12-31 15:00):")
 
-async def help_handler(message: types.Message) -> None:
-    """Обработчик команды /help"""
-    help_text = (
-        "🤖 Список доступных команд:\n\n"
-        "/start - Перезапустить бота\n"
-        "/booking - Записаться на фотосессию\n"
-        "/cancel - Отменить текущее действие\n"
-        "/my_bookings - Просмотреть ваши записи"
-    )
-    await message.answer(help_text)
+async def my_bookings_handler(message: types.Message):
+    """Обработчик команды /my_bookings"""
+    db = Database()
+    bookings = db.get_upcoming_sessions(user_id=message.from_user.id)
+    if bookings:
+        text = "Ваши записи:\n" + "\n".join(
+            f"📅 {b.session_date.strftime('%d.%m.%Y %H:%M')}" 
+            for b in bookings
+        )
+    else:
+        text = "У вас нет активных записей 😔"
+    await message.answer(text)
 
 def register_handlers(dp: Dispatcher) -> None:
-    """
-    Регистрация всех обработчиков команд
-    
-    Args:
-        dp (Dispatcher): Диспетчер Aiogram
-    """
-    dp.register_message_handler(start_handler, commands=["start"], state="*")
-    dp.register_message_handler(help_handler, commands=["help"], state="*")
-    logger.info("Обработчики команд успешно зарегистрированы")
+    # Добавьте новые обработчики
+    dp.register_message_handler(booking_handler, Command("booking"), state="*")
+    dp.register_message_handler(my_bookings_handler, Command("my_bookings"), state="*")
