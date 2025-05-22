@@ -43,11 +43,9 @@ class Database:
             session.commit()
 
     def get_upcoming_sessions(self, user_id: int = None):
-        from datetime import datetime, timedelta
+        from datetime import datetime
         with self.Session() as session:
-            query = session.query(Booking).filter(
-                Booking.session_date > datetime.now()
-            )
+            query = session.query(Booking).filter(Booking.session_date > datetime.now())
             if user_id:
                 query = query.filter_by(user_id=user_id)
             return query.all()
