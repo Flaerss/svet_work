@@ -1,19 +1,13 @@
-from database import Database  # Добавьте импорт
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from aiogram import Bot
+import logging
+from database import Database
+
+logger = logging.getLogger(__name__)
 
 class Scheduler:
-    async def _send_reminders(self, bot: Bot):
-        """Отправка напоминаний о бронированиях"""
-        try:
-            db = Database()
-            upcoming = db.get_upcoming_sessions(hours=1)  # Сеансы в ближайший час
-            for booking in upcoming:
-                user = db.get_user(booking.user_id)
-                await bot.send_message(
-                    chat_id=user.telegram_id,
-                    text=f"⏰ Через час ваша фотосессия в {booking.session_date.strftime('%H:%M')}"
-                )
-        except Exception as e:
-            logger.error(f"Ошибка отправки напоминаний: {e}")
+    def __init__(self):
+        self.scheduler = AsyncIOScheduler()
 
     async def start(self, bot: Bot):
         self.scheduler.add_job(
@@ -23,3 +17,19 @@ class Scheduler:
             args=[bot]
         )
         self.scheduler.start()
+        logger.info("Планировщик запущен")
+
+    async def _send_reminders(self, bot: Bot):
+        """Отправка напоминаний"""
+        try:
+            db = Database()
+            bookings = db.get_upcoming_sessions(hours=1)
+            for booking in bookings:
+                await bot.send_message(
+                    chat_id=booking.user_id,
+                    text=f"⏰ Через час ваша фотосессия!"
+                )
+        except Exception as e:
+            logger.error(f"Ошибка: {e}")
+
+scheduler = Scheduler()
