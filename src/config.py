@@ -12,10 +12,15 @@ LOG_CONFIG = {
     "version": 1,
     "disable_existing_loggers": False,
     "handlers": {
-        "console": {"class": "logging.StreamHandler"}
+        "file": {
+            "class": "logging.FileHandler",
+            "filename": LOGS_DIR / "bot.log",
+            "encoding": "utf-8",
+            "level": "INFO"
+        }
     },
     "root": {
-        "handlers": ["console"],
+        "handlers": ["file"],
         "level": "INFO"
     }
 }
