@@ -1,19 +1,20 @@
-from flask import Flask, render_template, redirect, url_for
+from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager, login_user, logout_user, login_required
-from config import Config
+from flask_migrate import Migrate
 
-app = Flask(__name__)
-app.config.from_object(Config)
-db = SQLAlchemy(app)
-login_manager = LoginManager(app)
+db = SQLAlchemy()
+migrate = Migrate()
 
-@login_manager.user_loader
-def load_user(user_id):
-    return Admin.query.get(int(user_id))
+def create_app():
+    app = Flask(__name__)
+    app.config.from_object("config.Config")
+    
+    db.init_app(app)
+    migrate.init_app(app, db)  # Инициализация Flask-Migrate
+    
+    return app
 
-@app.route('/templates')
-@login_required
-def templates():
-    templates = MessageTemplate.query.all()
-    return render_template('templates/list.html', templates=templates)
+app = create_app()
+
+if __name__ == "__main__":
+    app.run()
