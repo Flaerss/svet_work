@@ -1,25 +1,32 @@
 import os
-from pathlib import Path
+import asyncio
+import logging
+from aiogram import Bot, Dispatcher
+from aiogram.enums import ParseMode
+from config import Config
 
-class Config:
-    # Пути
-    BASE_DIR = Path(__file__).parent.parent
-    DATA_DIR = BASE_DIR / "data"
-    LOGS_DIR = BASE_DIR / "logs"
-    
-    # Бот
-    BOT_TOKEN = os.getenv("BOT_TOKEN")
-    ADMIN_ID = int(os.getenv("ADMIN_ID", 0))
-    
-    # YClients
-    YCLIENTS_TOKEN = os.getenv("YCLIENTS_TOKEN")
-    COMPANY_ID = os.getenv("COMPANY_ID")
-    
-    # Веб
-    WEB_SECRET_KEY = os.getenv("WEB_SECRET_KEY", "default-secret-key")
-    SQLALCHEMY_DATABASE_URI = f"sqlite:///{DATA_DIR}/bookings.db"
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 
-    @classmethod
-    def create_dirs(cls):
-        cls.DATA_DIR.mkdir(exist_ok=True)
-        cls.LOGS_DIR.mkdir(exist_ok=True)
+async def main():
+    try:
+        bot = Bot(token=Config.BOT_TOKEN, parse_mode=ParseMode.HTML)
+        dp = Dispatcher()
+        
+        # Импорт обработчиков
+        from app.handlers import router
+        dp.include_router(router)
+        
+        # Запуск
+        logging.info("Бот запущен")
+        await dp.start_polling(bot)
+        
+    except Exception as e:
+        logging.error(f"Ошибка: {e}")
+    finally:
+        logging.info("Бот остановлен")
+
+if __name__ == "__main__":
+    asyncio.run(main())
