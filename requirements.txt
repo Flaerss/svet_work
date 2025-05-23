@@ -1,0 +1,25 @@
+# Основные зависимости
+python-dotenv==0.19.0  # Для работы с .env
+
+# Telegram бот
+aiogram==3.0.0b7        # Фреймворк для бота
+apscheduler==3.10.1     # Планировщик напоминаний
+
+# База данных
+sqlalchemy==2.0.15      # ORM для работы с БД
+alembic==1.11.1         # Миграции БД
+
+# Веб-интерфейс
+flask==2.0.1            # Веб-фреймворк
+flask-sqlalchemy==3.0.3 # Интеграция SQLAlchemy с Flask
+flask-login==0.5.0      # Аутентификация пользователей
+flask-admin==1.6.1      # Админ-панель
+
+# Внешние API
+requests==2.28.1        # HTTP-запросы к YClients
+twilio==8.3.0           # Интеграция с WhatsApp
+
+# Дополнительные
+werkzeug==2.0.1         # WSGI-утилиты для Flask
+aiohttp==3.8.4          # Асинхронные HTTP-клиенты
+python-dateutil==2.8.2  # Работа с датами
