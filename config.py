@@ -40,5 +40,5 @@ class Config:
         return {
             'BASE_DIR': str(cls.BASE_DIR),
             'DATA_DIR': str(cls.DATA_DIR),
-            'LOGS_DIR': str(cls.LOGS_DIR),
+            'LOGS_DIR': str(cls.LOGS_DIR),}
         
