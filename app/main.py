@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 # Локальные импорты
-from handlers import client_handlers
+from app.handlers import client_handlers  # Абсолютный импорт
 from app.services.yclients_service import YClientsAPI
 from app.database import get_async_db, init_db
 from config import Config
