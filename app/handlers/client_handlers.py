@@ -5,7 +5,7 @@ from aiogram.types import ReplyKeyboardRemove
 from datetime import datetime
 
 # Локальные импорты
-from app.services.yclients_service import YClientsAPI
+from ..services.yclients_service import YClientsAPI  # Относительный импорт
 from app.database import get_async_db
 from app.models import Client, Booking
 from config import Config
