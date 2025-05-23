@@ -1,17 +1,13 @@
-from aiogram import Router, types, F
-from aiogram.filters import Command, StateFilter
-from aiogram.fsm.context import FSMContext
-from aiogram.types import ReplyKeyboardRemove
-from datetime import datetime
-
-# Локальные импорты
+from aiogram import Router, types
+from aiogram.filters import Command
 from ..services.yclients_service import YClientsAPI  # Относительный импорт
-from app.database import get_async_db
-from app.models import Client, Booking
-from config import Config
+from ..database import get_async_db
 
 router = Router()
-yclients = YClientsAPI()
+yc = YClientsAPI()
+
+@router.message(Command("start"))
+async def start_handler(message: types.Message):
 
 # -------------------------
 # Обработчики команд
