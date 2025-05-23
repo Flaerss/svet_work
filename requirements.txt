@@ -1,5 +1,6 @@
 flask==2.2.3
-flask-sqlalchemy==2.5.1
+werkzeug==2.2.3  # Фиксируем совместимую версию
+flask-sqlalchemy==3.0.3
 flask-migrate==4.0.5
 python-dotenv==0.19.0
 aiogram==3.0.0b7
