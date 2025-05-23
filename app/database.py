@@ -61,5 +61,9 @@ async def example_usage():
         pass
 
 if __name__ == "__main__":
-    init_db()  # Инициализация базы данных при запуске
-    example_usage()  # Пример асинхронного использования
+    try:
+        init_db()  # Инициализация базы данных при запуске
+        example_usage()  # Пример асинхронного использования
+    except Exception as e:
+        logging.error(f"Произошла ошибка: {e}")
+        print(f"Произошла ошибка: {e}")
