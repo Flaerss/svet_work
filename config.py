@@ -1,4 +1,4 @@
-import os
+
 from pathlib import Path
 
 class Config:
@@ -27,5 +27,18 @@ class Config:
     @classmethod
     def create_dirs(cls):
         """Создает необходимые директории."""
-        cls.DATA_DIR.mkdir(exist_ok=True)
-        cls.LOGS_DIR.mkdir(exist_ok=True)
+        try:
+            cls.DATA_DIR.mkdir(exist_ok=True)
+            cls.LOGS_DIR.mkdir(exist_ok=True)
+            print(f"Директории созданы: {cls.DATA_DIR}, {cls.LOGS_DIR}")
+        except Exception as e:
+            print(f"Ошибка при создании директорий: {e}")
+
+    @classmethod
+    def get_config(cls):
+        """Возвращает все настройки конфигурации"""
+        return {
+            'BASE_DIR': str(cls.BASE_DIR),
+            'DATA_DIR': str(cls.DATA_DIR),
+            'LOGS_DIR': str(cls.LOGS_DIR),
+        
