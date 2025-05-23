@@ -24,6 +24,7 @@ async def start_cmd(message: types.Message):
         # Проверяем существующего пользователя
         existing_user = await db.execute(
             select(Client).where(Client.telegram_id == message.from_user.id)
+        )
         existing_user = existing_user.scalar_one_or_none()
 
         if not existing_user:
