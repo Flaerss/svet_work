@@ -1,7 +1,7 @@
-from datetime import datetime
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, UniqueConstraint
-from sqlalchemy.orm import relationship
-from app.database import Base
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, ForeignKey
+from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from config import Config
 import logging
 
 # Настройка логирования
@@ -10,43 +10,56 @@ logging.basicConfig(
     level=logging.INFO
 )
 
-class Client(Base):
-    """Клиенты фотостудии"""
-    __tablename__ = 'clients'
-    
-    id = Column(Integer, primary_key=True)
-    yclients_id = Column(Integer, unique=True, comment="ID из YClients")
-    telegram_id = Column(Integer, unique=True, index=True)
-    phone = Column(String(20), comment="Формат: +79991234567", unique=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+# Синхронная версия для миграций и административных задач
+sync_engine = create_engine(
+    Config.SQLALCHEMY_DATABASE_URI,
+    pool_pre_ping=True,
+    connect_args={"check_same_thread": False}
+)
 
-    def __repr__(self):
-        return f"<Client {self.phone}>"
+# Асинхронная версия для работы бота
+async_engine = create_async_engine(
+    Config.SQLALCHEMY_DATABASE_URI.replace("sqlite://", "sqlite+aiosqlite://"),
+    echo=False,
+    future=True
+)
 
-    def validate(self):
-        if not self.phone:
-            raise ValueError("Поле телефона не должно быть пустым")
-        if len(self.phone) != 12:
-            raise ValueError("Неверный формат телефона")
+# Сессии
+SyncSessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=sync_engine
+)
 
-class Booking(Base):
-    """Записи на фотосессии"""
-    __tablename__ = 'bookings'
-    
-    id = Column(Integer, primary_key=True)
-    client_id = Column(Integer, ForeignKey('clients.id'), index=True)
-    session_date = Column(DateTime, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    status = Column(String(20), default='active')  # active/canceled/changed
+AsyncSessionLocal = sessionmaker(
+    bind=async_engine,
+    class_=AsyncSession,
+    expire_on_commit=False
+)
 
-    client = relationship("Client", back_populates="bookings")
+Base = declarative_base()
 
-    def __repr__(self):
-        return f"<Booking {self.session_date}>"
+def init_db():
+    """Инициализация таблиц в базе данных"""
+    Base.metadata.create_all(bind=sync_engine)
+    logging.info("Таблицы базы данных инициализированы")
 
-    def validate(self):
-        if not self.session_date:
-            raise ValueError("Поле даты сессии не должно быть пустым")
+async def get_async_db():
+    """Асинхронный генератор сессий для бота"""
+    async with AsyncSessionLocal() as session:
+        yield session
 
-# Логирование операций с базой данных
-Base.metadata.create_all(logging=logging)
+def get_sync_db():
+    """Синхронный генератор сессий для веб-интерфейса"""
+    with SyncSessionLocal() as session:
+        yield session
+
+# Пример использования
+async def example_usage():
+    async with get_async_db() as db:
+        # Ваш код работы с базой данных
+        pass
+
+if __name__ == "__main__":
+    init_db()  # Инициализация базы данных при запуске
+    example_usage()  # Пример асинхронного использования
